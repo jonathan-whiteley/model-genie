@@ -1,5 +1,5 @@
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import type { UseQueryOptions, UseSuspenseQueryOptions } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery, useMutation } from "@tanstack/react-query";
+import type { UseQueryOptions, UseSuspenseQueryOptions, UseMutationOptions } from "@tanstack/react-query";
 export class ApiError extends Error {
     status: number;
     statusText: string;
@@ -12,6 +12,25 @@ export class ApiError extends Error {
         this.body = body;
     }
 }
+export interface Body_uploadQuestions {
+    file: string;
+}
+export interface CatalogListResponse {
+    catalogs: string[];
+}
+export interface ColumnMapping {
+    aggregation?: string | null;
+    column: string;
+    confidence: number;
+    entity_name: string;
+    entity_type: "measure" | "dimension" | "filter";
+    table: string;
+}
+export interface ColumnMatch {
+    catalog_column: string;
+    confidence: number;
+    entity_name: string;
+}
 export interface ComplexValue {
     display?: string | null;
     primary?: boolean | null;
@@ -19,12 +38,96 @@ export interface ComplexValue {
     type?: string | null;
     value?: string | null;
 }
+export interface ConfirmedMapping {
+    aggregation?: string | null;
+    column: string;
+    entity_name: string;
+    entity_type: "measure" | "dimension" | "filter";
+    table: string;
+}
+export interface DeployMetricViewRequest {
+    catalog: string;
+    schema_name: string;
+    view_name: string;
+    yaml_content: string;
+}
+export interface DeployMetricViewResponse {
+    message: string;
+    success: boolean;
+}
+export interface DiscoverTablesRequest {
+    catalog: string;
+    entities: ExtractedEntity[];
+}
+export interface DiscoverTablesResponse {
+    tables: TableSuggestion[];
+}
+export interface ERDEdge {
+    source: string;
+    source_column: string;
+    target: string;
+    target_column: string;
+}
+export interface ERDNode {
+    columns: string[];
+    id: string;
+    table_name: string;
+}
+export interface ERDSpec {
+    edges: ERDEdge[];
+    nodes: ERDNode[];
+}
+export interface ExtractedEntity {
+    inferred_column: string;
+    name: string;
+    source_questions: number[];
+    type: "measure" | "dimension" | "filter";
+}
+export interface GenerateMetricViewRequest {
+    confirmed_mappings: ConfirmedMapping[];
+    source_table: string;
+    view_name: string;
+}
+export interface GenerateMetricViewResponse {
+    erd: ERDSpec;
+    yaml_content: string;
+}
 export interface HTTPValidationError {
     detail?: ValidationError[];
+}
+export interface Highlight {
+    end: number;
+    start: number;
+    text: string;
+    type: "measure" | "dimension" | "filter";
+}
+export interface MapColumnsRequest {
+    entities: ExtractedEntity[];
+    selected_tables: string[];
+}
+export interface MapColumnsResponse {
+    mappings: ColumnMapping[];
 }
 export interface Name {
     family_name?: string | null;
     given_name?: string | null;
+}
+export interface ParseQuestionsRequest {
+    questions: string[];
+}
+export interface ParseQuestionsResponse {
+    entities: ExtractedEntity[];
+    parsed_questions: ParsedQuestion[];
+}
+export interface ParsedQuestion {
+    highlights: Highlight[];
+    original_text: string;
+}
+export interface TableSuggestion {
+    confidence: number;
+    description: string;
+    matched_columns: ColumnMatch[];
+    table_name: string;
 }
 export interface User {
     active?: boolean | null;
@@ -53,6 +156,58 @@ export interface ValidationError {
 }
 export interface VersionOut {
     version: string;
+}
+export const listCatalogs = async (options?: RequestInit): Promise<{
+    data: CatalogListResponse;
+}> =>{
+    const res = await fetch("/api/catalogs", {
+        ...options,
+        method: "GET"
+    });
+    if (!res.ok) {
+        const body = await res.text();
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(body);
+        } catch  {
+            parsed = body;
+        }
+        throw new ApiError(res.status, res.statusText, parsed);
+    }
+    return {
+        data: await res.json()
+    };
+};
+export const listCatalogsKey = ()=>{
+    return [
+        "/api/catalogs"
+    ] as const;
+};
+export function useListCatalogs<TData = {
+    data: CatalogListResponse;
+}>(options?: {
+    query?: Omit<UseQueryOptions<{
+        data: CatalogListResponse;
+    }, ApiError, TData>, "queryKey" | "queryFn">;
+}) {
+    return useQuery({
+        queryKey: listCatalogsKey(),
+        queryFn: ()=>listCatalogs(),
+        ...options?.query
+    });
+}
+export function useListCatalogsSuspense<TData = {
+    data: CatalogListResponse;
+}>(options?: {
+    query?: Omit<UseSuspenseQueryOptions<{
+        data: CatalogListResponse;
+    }, ApiError, TData>, "queryKey" | "queryFn">;
+}) {
+    return useSuspenseQuery({
+        queryKey: listCatalogsKey(),
+        queryFn: ()=>listCatalogs(),
+        ...options?.query
+    });
 }
 export interface CurrentUserParams {
     "X-Forwarded-Host"?: string | null;
@@ -136,6 +291,221 @@ export function useCurrentUserSuspense<TData = {
         queryKey: currentUserKey(options?.params),
         queryFn: ()=>currentUser(options?.params),
         ...options?.query
+    });
+}
+export const deployMetricView = async (data: DeployMetricViewRequest, options?: RequestInit): Promise<{
+    data: DeployMetricViewResponse;
+}> =>{
+    const res = await fetch("/api/deploy-metric-view", {
+        ...options,
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            ...options?.headers
+        },
+        body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+        const body = await res.text();
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(body);
+        } catch  {
+            parsed = body;
+        }
+        throw new ApiError(res.status, res.statusText, parsed);
+    }
+    return {
+        data: await res.json()
+    };
+};
+export function useDeployMetricView(options?: {
+    mutation?: UseMutationOptions<{
+        data: DeployMetricViewResponse;
+    }, ApiError, DeployMetricViewRequest>;
+}) {
+    return useMutation({
+        mutationFn: (data)=>deployMetricView(data),
+        ...options?.mutation
+    });
+}
+export const discoverTables = async (data: DiscoverTablesRequest, options?: RequestInit): Promise<{
+    data: DiscoverTablesResponse;
+}> =>{
+    const res = await fetch("/api/discover-tables", {
+        ...options,
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            ...options?.headers
+        },
+        body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+        const body = await res.text();
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(body);
+        } catch  {
+            parsed = body;
+        }
+        throw new ApiError(res.status, res.statusText, parsed);
+    }
+    return {
+        data: await res.json()
+    };
+};
+export function useDiscoverTables(options?: {
+    mutation?: UseMutationOptions<{
+        data: DiscoverTablesResponse;
+    }, ApiError, DiscoverTablesRequest>;
+}) {
+    return useMutation({
+        mutationFn: (data)=>discoverTables(data),
+        ...options?.mutation
+    });
+}
+export const generateMetricView = async (data: GenerateMetricViewRequest, options?: RequestInit): Promise<{
+    data: GenerateMetricViewResponse;
+}> =>{
+    const res = await fetch("/api/generate-metric-view", {
+        ...options,
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            ...options?.headers
+        },
+        body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+        const body = await res.text();
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(body);
+        } catch  {
+            parsed = body;
+        }
+        throw new ApiError(res.status, res.statusText, parsed);
+    }
+    return {
+        data: await res.json()
+    };
+};
+export function useGenerateMetricView(options?: {
+    mutation?: UseMutationOptions<{
+        data: GenerateMetricViewResponse;
+    }, ApiError, GenerateMetricViewRequest>;
+}) {
+    return useMutation({
+        mutationFn: (data)=>generateMetricView(data),
+        ...options?.mutation
+    });
+}
+export const mapColumns = async (data: MapColumnsRequest, options?: RequestInit): Promise<{
+    data: MapColumnsResponse;
+}> =>{
+    const res = await fetch("/api/map-columns", {
+        ...options,
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            ...options?.headers
+        },
+        body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+        const body = await res.text();
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(body);
+        } catch  {
+            parsed = body;
+        }
+        throw new ApiError(res.status, res.statusText, parsed);
+    }
+    return {
+        data: await res.json()
+    };
+};
+export function useMapColumns(options?: {
+    mutation?: UseMutationOptions<{
+        data: MapColumnsResponse;
+    }, ApiError, MapColumnsRequest>;
+}) {
+    return useMutation({
+        mutationFn: (data)=>mapColumns(data),
+        ...options?.mutation
+    });
+}
+export const parseQuestions = async (data: ParseQuestionsRequest, options?: RequestInit): Promise<{
+    data: ParseQuestionsResponse;
+}> =>{
+    const res = await fetch("/api/parse-questions", {
+        ...options,
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            ...options?.headers
+        },
+        body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+        const body = await res.text();
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(body);
+        } catch  {
+            parsed = body;
+        }
+        throw new ApiError(res.status, res.statusText, parsed);
+    }
+    return {
+        data: await res.json()
+    };
+};
+export function useParseQuestions(options?: {
+    mutation?: UseMutationOptions<{
+        data: ParseQuestionsResponse;
+    }, ApiError, ParseQuestionsRequest>;
+}) {
+    return useMutation({
+        mutationFn: (data)=>parseQuestions(data),
+        ...options?.mutation
+    });
+}
+export const uploadQuestions = async (data: FormData, options?: RequestInit): Promise<{
+    data: ParseQuestionsResponse;
+}> =>{
+    const res = await fetch("/api/upload-questions", {
+        ...options,
+        method: "POST",
+        headers: {
+            ...options?.headers
+        },
+        body: data
+    });
+    if (!res.ok) {
+        const body = await res.text();
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(body);
+        } catch  {
+            parsed = body;
+        }
+        throw new ApiError(res.status, res.statusText, parsed);
+    }
+    return {
+        data: await res.json()
+    };
+};
+export function useUploadQuestions(options?: {
+    mutation?: UseMutationOptions<{
+        data: ParseQuestionsResponse;
+    }, ApiError, FormData>;
+}) {
+    return useMutation({
+        mutationFn: (data)=>uploadQuestions(data),
+        ...options?.mutation
     });
 }
 export const version = async (options?: RequestInit): Promise<{
