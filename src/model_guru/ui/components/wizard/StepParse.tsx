@@ -13,9 +13,9 @@ import {
 import type { Highlight } from "@/lib/api";
 
 const HIGHLIGHT_BG: Record<string, string> = {
-  measure: "bg-green-200/50 dark:bg-green-800/30",
-  dimension: "bg-blue-200/50 dark:bg-blue-800/30",
-  filter: "bg-gray-200/50 dark:bg-gray-700/30",
+  measure: "bg-green-200 text-green-900 dark:bg-green-900 dark:text-green-300 font-medium",
+  dimension: "bg-blue-200 text-blue-900 dark:bg-blue-900 dark:text-blue-300 font-medium",
+  filter: "bg-gray-200 text-gray-900 dark:bg-gray-800 dark:text-gray-300 font-medium",
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -41,7 +41,7 @@ function HighlightedText({
       parts.push(<span key={`t-${i}`}>{text.slice(lastEnd, h.start)}</span>);
     }
     parts.push(
-      <span key={`h-${i}`} className={`px-1 rounded ${HIGHLIGHT_BG[h.type]}`}>
+      <span key={`h-${i}`} className={`px-1.5 py-0.5 rounded-md text-sm ${HIGHLIGHT_BG[h.type]}`}>
         {text.slice(h.start, h.end)}
       </span>,
     );
@@ -89,15 +89,15 @@ export function StepParse() {
               </div>
             ))}
           </div>
-          <div className="flex gap-4 mt-4 text-xs text-muted-foreground">
-            <span className={`px-2 py-1 rounded ${HIGHLIGHT_BG.measure}`}>
-              Measure
+          <div className="flex gap-3 mt-4 text-xs">
+            <span className={`px-2.5 py-1 rounded-md ${HIGHLIGHT_BG.measure}`}>
+              measure
             </span>
-            <span className={`px-2 py-1 rounded ${HIGHLIGHT_BG.dimension}`}>
-              Dimension
+            <span className={`px-2.5 py-1 rounded-md ${HIGHLIGHT_BG.dimension}`}>
+              dimension
             </span>
-            <span className={`px-2 py-1 rounded ${HIGHLIGHT_BG.filter}`}>
-              Filter
+            <span className={`px-2.5 py-1 rounded-md ${HIGHLIGHT_BG.filter}`}>
+              filter
             </span>
           </div>
         </CardContent>

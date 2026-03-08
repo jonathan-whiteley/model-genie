@@ -19,7 +19,7 @@ function Layout() {
   const navItems = [
     {
       to: "/",
-      label: "ModelGuru",
+      label: "ModelGenie",
       icon: <Wand2 size={16} />,
       match: (path: string) => path === "/",
     },

@@ -137,6 +137,7 @@ class DeployMetricViewRequest(BaseModel):
 class DeployMetricViewResponse(BaseModel):
     success: bool
     message: str
+    view_url: str | None = None
 
 
 # --- Catalogs ---

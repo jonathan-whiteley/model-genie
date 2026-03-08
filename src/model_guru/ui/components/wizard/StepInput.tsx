@@ -6,6 +6,28 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+function GenieLampIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className={className} fill="currentColor">
+      {/* Spout - long curved pouring lip on the left */}
+      <path d="M48 240c0-16 8-28 24-36l80-40c8-4 16-2 16 8v24c0 8-4 14-12 18l-60 30c-4 2-8 6-8 12v8c0 8 4 14 12 16l56 16h92v-56H144c-48 0-96-32-96-64v64z" opacity="0.95"/>
+      {/* Lamp body - big round pot */}
+      <ellipse cx="296" cy="296" rx="136" ry="80" />
+      {/* Handle - curly C shape on the right */}
+      <path d="M432 264c24 0 44 16 44 40s-20 40-44 40" fill="none" stroke="currentColor" strokeWidth="28" strokeLinecap="round"/>
+      {/* Lid rim - wide band on top of body */}
+      <rect x="216" y="208" width="160" height="20" rx="10"/>
+      {/* Lid dome */}
+      <path d="M248 208c0 0 16-48 48-48s48 48 48 48z"/>
+      {/* Lid ball finial */}
+      <circle cx="296" cy="148" r="16"/>
+      {/* Pedestal neck */}
+      <path d="M264 376l-8 24h80l-8-24z"/>
+      {/* Pedestal base */}
+      <ellipse cx="296" cy="408" rx="56" ry="16"/>
+    </svg>
+  );
+}
 
 export function StepInput() {
   const { setStep, setQuestions, setParsedQuestions, setEntities } = useWizard();
@@ -79,15 +101,22 @@ export function StepInput() {
         <CardContent className="space-y-4">
           <Textarea
             placeholder={
-              "What were net sales by category last month?\nHow many weekly units sold in west region?\nShow Y over Y performance of store 123 over last 12 months\nWhat were product XYZ's gross sales last week?"
+              "What were net sales by category last month?\nHow many weekly units sold in west region?\nWhat were product XYZ's gross sales last week?"
             }
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={8}
             className="font-mono text-sm"
           />
-          <Button onClick={handleParse} disabled={isLoading || !text.trim()}>
-            {isLoading ? "Analyzing questions..." : "Analyze Questions"}
+          <Button onClick={handleParse} disabled={isLoading || !text.trim()} className="gap-2">
+            {isLoading ? (
+              "Analyzing questions..."
+            ) : (
+              <>
+                <GenieLampIcon className="w-5 h-5" />
+                Analyze Questions
+              </>
+            )}
           </Button>
         </CardContent>
       </Card>

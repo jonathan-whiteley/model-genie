@@ -25,7 +25,7 @@ interface WizardState {
   yamlContent: string;
   erdNodes: ERDNode[];
   erdEdges: ERDEdge[];
-  deployResult: { success: boolean; message: string } | null;
+  deployResult: { success: boolean; message: string; view_url?: string | null } | null;
 }
 
 interface WizardActions {

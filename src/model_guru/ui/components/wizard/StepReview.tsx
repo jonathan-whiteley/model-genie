@@ -25,7 +25,7 @@ function TableNode({
 }) {
   return (
     <div className="bg-card border-2 rounded-lg shadow-md min-w-[200px]" style={{ borderColor: data.isSource ? 'hsl(var(--primary))' : 'hsl(var(--border))' }}>
-      <Handle type="target" position={Position.Top} style={{ background: '#6366f1', width: 8, height: 8 }} />
+      <Handle type="target" position={Position.Top} style={{ background: '#FF3621', width: 8, height: 8 }} />
       <div className={`px-3 py-2 rounded-t-md font-semibold text-sm ${data.isSource ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
         {data.label}
       </div>
@@ -36,7 +36,7 @@ function TableNode({
           </div>
         ))}
       </div>
-      <Handle type="source" position={Position.Bottom} style={{ background: '#6366f1', width: 8, height: 8 }} />
+      <Handle type="source" position={Position.Bottom} style={{ background: '#FF3621', width: 8, height: 8 }} />
     </div>
   );
 }
@@ -151,12 +151,12 @@ export function StepReview() {
           label: `${edge.source_column} = ${edge.target_column}`,
           type: "smoothstep",
           animated: true,
-          style: { stroke: "#6366f1", strokeWidth: 2 },
-          labelStyle: { fontSize: 11, fontFamily: "monospace", fill: "#a5b4fc" },
-          labelBgStyle: { fill: "#1e1e2e", fillOpacity: 0.8 },
+          style: { stroke: "#FF3621", strokeWidth: 2 },
+          labelStyle: { fontSize: 11, fontFamily: "monospace", fill: "#ff8c73" },
+          labelBgStyle: { fill: "#1a1a2e", fillOpacity: 0.8 },
           labelBgPadding: [6, 4] as [number, number],
-          markerStart: { type: "arrow" as const, color: "#6366f1" },
-          markerEnd: { type: "arrowclosed" as const, color: "#6366f1" },
+          markerStart: { type: "arrow" as const, color: "#FF3621" },
+          markerEnd: { type: "arrowclosed" as const, color: "#FF3621" },
         };
       })
       .filter(Boolean) as Edge[];
@@ -192,7 +192,7 @@ export function StepReview() {
           <CardTitle>Entity Relationship Diagram</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[400px] border rounded-lg" style={{ background: "#1e1e2e" }}>
+          <div className="h-[400px] border rounded-lg" style={{ background: "#1a1a2e" }}>
             <ReactFlow
               nodes={nodes}
               edges={edges}

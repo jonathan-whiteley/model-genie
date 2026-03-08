@@ -12,7 +12,7 @@ export function Logo({ to = "/", className = "", showText = true }: LogoProps) {
       <img
         src="/logo.svg"
         alt="logo"
-        className="h-6 w-6 text-primary border border-primary rounded-sm"
+        className="h-7 w-7"
       />
       {showText && (
         <span className="font-semibold text-lg">{__APP_NAME__}</span>

@@ -54,6 +54,7 @@ export interface DeployMetricViewRequest {
 export interface DeployMetricViewResponse {
     message: string;
     success: boolean;
+    view_url?: string | null;
 }
 export interface DiscoverTablesRequest {
     catalog: string;
