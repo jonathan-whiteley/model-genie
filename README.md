@@ -1,68 +1,83 @@
-# model-guru ✨
+# ModelGuru
 
-> A modern full-stack application built with [`apx`](https://github.com/databricks-solutions/apx) 🚀
+A Databricks App that shifts Genie space creation from bottom-up (data first) to top-down (questions first). Users input business questions, and ModelGuru extracts measures, dimensions, and filters, discovers matching Unity Catalog tables, maps columns, and generates a deployable Metric View YAML semantic model.
 
-## 🛠️ Tech Stack
+## How It Works
 
-This application leverages a powerful, modern tech stack:
+ModelGuru guides you through a 6-step wizard:
 
-- **Backend** 🐍 Python + [FastAPI](https://fastapi.tiangolo.com/)
-- **Frontend** ⚛️ React + [shadcn/ui](https://ui.shadcn.com/)
-- **API Client** 🔄 Auto-generated TypeScript client from OpenAPI schema
+1. **Input Questions** - Paste or upload (CSV/XLSX) 10-20 business questions
+2. **Parse & Extract** - LLM extracts measures, dimensions, and filters with highlighted annotations
+3. **Discover Tables** - Select a catalog; the app searches all schemas for relevant tables, ranked by confidence
+4. **Map Columns** - Review and confirm entity-to-column mappings with suggested aggregations
+5. **Review** - Inspect the generated Metric View YAML and interactive ERD diagram
+6. **Deploy** - Deploy the Metric View directly to Unity Catalog
 
-## 🚀 Quick Start
+## Tech Stack
 
-### Development Mode
+- **Backend**: Python, FastAPI, Pydantic
+- **Frontend**: React, TypeScript, shadcn/ui, TanStack Router & Query, React Flow
+- **LLM**: Databricks Foundation Model API (`databricks-claude-sonnet-4-6`)
+- **Infrastructure**: Databricks SDK (`WorkspaceClient`), Unity Catalog, Metric Views
+- **Build**: [APX framework](https://github.com/databricks-solutions/apx) (uv + bun), Databricks Asset Bundle (DAB)
 
-Start all development servers (backend, frontend, and OpenAPI watcher) in detached mode:
+## Getting Started
 
-```bash
-apx dev start
-```
+### Prerequisites
 
-This will start an apx development server, which in it's turn runs backend, frontend and OpenAPI watcher.
-All servers run in the background, with logs kept in-memory of the apx dev server.
+- [uv](https://docs.astral.sh/uv/) and [bun](https://bun.sh/) installed
+- Databricks CLI configured with a profile (default: `DEFAULT`)
 
-### 📊 Monitoring & Logs
-
-```bash
-# View all logs
-apx dev logs
-
-# Stream logs in real-time
-apx dev logs -f
-
-# Check server status
-apx dev status
-
-# Stop all servers
-apx dev stop
-```
-
-## ✅ Code Quality
-
-Run type checking and linting for both TypeScript and Python:
+### Local Development
 
 ```bash
-apx dev check
+# Start the dev server (backend + frontend + OpenAPI watcher)
+apx start
+
+# Check types (Python + TypeScript)
+apx check
+
+# View logs
+apx logs
 ```
 
-## 📦 Build
-
-Create a production-ready build:
+### Deploy to Databricks
 
 ```bash
-apx build
+databricks bundle deploy --target dev
 ```
 
-## 🚢 Deployment
+## Project Structure
 
-Deploy to Databricks:
-
-```bash
-databricks bundle deploy -p <your-profile>
+```
+src/model_guru/
+  backend/
+    app.py              # FastAPI entrypoint
+    models.py           # Pydantic request/response models
+    llm.py              # Foundation Model API client
+    routers/
+      parse.py          # POST /api/parse-questions, /api/upload-questions
+      discover.py       # GET /api/catalogs, POST /api/discover-tables
+      mapping.py        # POST /api/map-columns
+      generate.py       # POST /api/generate-metric-view
+      deploy.py         # POST /api/deploy-metric-view
+  ui/
+    lib/
+      api.ts            # Auto-generated API client (DO NOT EDIT)
+      wizard-context.tsx # Wizard state management
+    components/wizard/  # Step components (StepInput, StepParse, etc.)
+    routes/
+      index.tsx         # Main wizard page
 ```
 
----
+## API Endpoints
 
-<p align="center">Built with ❤️ using <a href="https://github.com/databricks-solutions/apx">apx</a></p>
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/parse-questions` | Extract entities from business questions |
+| POST | `/api/upload-questions` | Upload CSV/XLSX file of questions |
+| GET | `/api/catalogs` | List available Unity Catalog catalogs |
+| POST | `/api/discover-tables` | Find relevant tables for extracted entities |
+| POST | `/api/map-columns` | Map entities to table columns |
+| POST | `/api/generate-metric-view` | Generate Metric View YAML and ERD |
+| POST | `/api/deploy-metric-view` | Deploy Metric View to Unity Catalog |

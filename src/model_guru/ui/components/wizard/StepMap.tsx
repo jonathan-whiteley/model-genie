@@ -41,8 +41,8 @@ export function StepMap() {
     const fetchMappings = async () => {
       try {
         const result = await mapMutation.mutateAsync({
-          entities,
-          selected_tables: selectedTables,
+          params: {},
+          data: { entities, selected_tables: selectedTables },
         });
         setLocalMappings(
           result.data.mappings.map((m) => ({

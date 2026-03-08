@@ -3,8 +3,13 @@ import {
   ReactFlow,
   Background,
   Controls,
+  Handle,
+  Position,
+  useNodesState,
+  useEdgesState,
   type Node,
   type Edge,
+  type NodeTypes,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useWizard } from "@/lib/wizard-context";
@@ -16,11 +21,12 @@ import { Textarea } from "@/components/ui/textarea";
 function TableNode({
   data,
 }: {
-  data: { label: string; columns: string[] };
+  data: { label: string; columns: string[]; isSource: boolean };
 }) {
   return (
-    <div className="bg-card border rounded-lg shadow-sm min-w-[180px]">
-      <div className="bg-primary text-primary-foreground px-3 py-2 rounded-t-lg font-medium text-sm">
+    <div className="bg-card border-2 rounded-lg shadow-md min-w-[200px]" style={{ borderColor: data.isSource ? 'hsl(var(--primary))' : 'hsl(var(--border))' }}>
+      <Handle type="target" position={Position.Top} style={{ background: '#6366f1', width: 8, height: 8 }} />
+      <div className={`px-3 py-2 rounded-t-md font-semibold text-sm ${data.isSource ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
         {data.label}
       </div>
       <div className="px-3 py-2 space-y-1">
@@ -30,11 +36,12 @@ function TableNode({
           </div>
         ))}
       </div>
+      <Handle type="source" position={Position.Bottom} style={{ background: '#6366f1', width: 8, height: 8 }} />
     </div>
   );
 }
 
-const nodeTypes = { tableNode: TableNode };
+const nodeTypes: NodeTypes = { tableNode: TableNode };
 
 export function StepReview() {
   const {
@@ -50,6 +57,8 @@ export function StepReview() {
   const [isEditing, setIsEditing] = useState(false);
   const [editableYaml, setEditableYaml] = useState("");
   const generateMutation = useGenerateMetricView();
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
   useEffect(() => {
     const generate = async () => {
@@ -69,23 +78,92 @@ export function StepReview() {
     generate();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const flowNodes: Node[] = erdNodes.map((node, i) => ({
-    id: node.id,
-    type: "tableNode",
-    position: { x: (i % 3) * 280, y: Math.floor(i / 3) * 200 },
-    data: {
-      label: node.table_name.split(".").pop() || node.table_name,
-      columns: node.columns,
-    },
-  }));
+  // Update React Flow state when ERD data changes
+  useEffect(() => {
+    if (erdNodes.length === 0) return;
 
-  const flowEdges: Edge[] = erdEdges.map((edge, i) => ({
-    id: `e-${i}`,
-    source: edge.source,
-    target: edge.target,
-    label: `${edge.source_column} \u2192 ${edge.target_column}`,
-    type: "smoothstep",
-  }));
+    // Layout: source table centered on top, dims spread below
+    const sourceIdx = erdNodes.findIndex((n) => n.id === sourceTable || n.table_name === sourceTable);
+    const dimNodes = erdNodes.filter((_, i) => i !== sourceIdx);
+
+    const newNodes: Node[] = [];
+
+    // Source node centered
+    if (sourceIdx >= 0) {
+      const node = erdNodes[sourceIdx];
+      newNodes.push({
+        id: node.id,
+        type: "tableNode",
+        position: { x: Math.max(0, (dimNodes.length - 1) * 140), y: 0 },
+        data: {
+          label: node.table_name.split(".").pop() || node.table_name,
+          columns: node.columns,
+          isSource: true,
+        },
+      });
+    }
+
+    // Dim nodes in a row below
+    dimNodes.forEach((node, i) => {
+      newNodes.push({
+        id: node.id,
+        type: "tableNode",
+        position: { x: i * 280, y: 250 },
+        data: {
+          label: node.table_name.split(".").pop() || node.table_name,
+          columns: node.columns,
+          isSource: false,
+        },
+      });
+    });
+
+    // Build edges — try exact match first, then fall back to matching by table_name
+    const nodeIdSet = new Set(newNodes.map((n) => n.id));
+    const nodeByName = new Map(
+      newNodes.map((n) => [n.data.label, n.id] as const),
+    );
+    const nodeByFullName = new Map(
+      erdNodes.map((n) => [n.table_name, n.id] as const),
+    );
+
+    const resolveId = (ref: string): string | undefined => {
+      if (nodeIdSet.has(ref)) return ref;
+      // Try matching by short name
+      const shortName = ref.split(".").pop() || ref;
+      if (nodeByName.has(shortName)) return nodeByName.get(shortName);
+      // Try matching by full table name
+      if (nodeByFullName.has(ref)) {
+        const resolved = nodeByFullName.get(ref);
+        if (resolved && nodeIdSet.has(resolved)) return resolved;
+      }
+      return undefined;
+    };
+
+    const newEdges: Edge[] = erdEdges
+      .map((edge, i) => {
+        const sourceId = resolveId(edge.source);
+        const targetId = resolveId(edge.target);
+        if (!sourceId || !targetId) return null;
+        return {
+          id: `e-${i}`,
+          source: sourceId,
+          target: targetId,
+          label: `${edge.source_column} = ${edge.target_column}`,
+          type: "smoothstep",
+          animated: true,
+          style: { stroke: "#6366f1", strokeWidth: 2 },
+          labelStyle: { fontSize: 11, fontFamily: "monospace", fill: "#a5b4fc" },
+          labelBgStyle: { fill: "#1e1e2e", fillOpacity: 0.8 },
+          labelBgPadding: [6, 4] as [number, number],
+          markerStart: { type: "arrow" as const, color: "#6366f1" },
+          markerEnd: { type: "arrowclosed" as const, color: "#6366f1" },
+        };
+      })
+      .filter(Boolean) as Edge[];
+
+    setNodes(newNodes);
+    setEdges(newEdges);
+  }, [erdNodes, erdEdges, sourceTable, setNodes, setEdges]);
 
   const handleSaveYaml = () => {
     setYamlContent(editableYaml);
@@ -114,12 +192,16 @@ export function StepReview() {
           <CardTitle>Entity Relationship Diagram</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[400px] border rounded-lg">
+          <div className="h-[400px] border rounded-lg" style={{ background: "#1e1e2e" }}>
             <ReactFlow
-              nodes={flowNodes}
-              edges={flowEdges}
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
               nodeTypes={nodeTypes}
               fitView
+              fitViewOptions={{ padding: 0.3 }}
+              colorMode="dark"
             >
               <Background />
               <Controls />

@@ -6,17 +6,19 @@ router = create_router()
 
 
 @router.post("/deploy-metric-view", response_model=DeployMetricViewResponse, operation_id="deployMetricView")
-def deploy_metric_view(request: DeployMetricViewRequest, ws: Dependencies.Client) -> DeployMetricViewResponse:
+def deploy_metric_view(request: DeployMetricViewRequest, ws: Dependencies.UserClient, sp_ws: Dependencies.Client) -> DeployMetricViewResponse:
     """Deploy a Metric View to Unity Catalog."""
     full_name = f"{request.catalog}.{request.schema_name}.{request.view_name}"
     sql = f"CREATE OR REPLACE VIEW {full_name}\nWITH METRICS\nLANGUAGE YAML\nAS $$\n{request.yaml_content}\n$$"
 
     try:
-        warehouses = list(ws.warehouses.list())
+        warehouses = list(sp_ws.warehouses.list())
         if not warehouses:
             return DeployMetricViewResponse(success=False, message="No SQL warehouses available.")
 
         warehouse_id = warehouses[0].id
+        if not warehouse_id:
+            return DeployMetricViewResponse(success=False, message="Warehouse ID is not available.")
         result = ws.statement_execution.execute_statement(
             warehouse_id=warehouse_id,
             statement=sql,

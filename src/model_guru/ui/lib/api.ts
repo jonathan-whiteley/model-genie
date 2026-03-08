@@ -157,12 +157,41 @@ export interface ValidationError {
 export interface VersionOut {
     version: string;
 }
-export const listCatalogs = async (options?: RequestInit): Promise<{
+export interface ListCatalogsParams {
+    "X-Forwarded-Host"?: string | null;
+    "X-Forwarded-Preferred-Username"?: string | null;
+    "X-Forwarded-User"?: string | null;
+    "X-Forwarded-Email"?: string | null;
+    "X-Request-Id"?: string | null;
+    "X-Forwarded-Access-Token"?: string | null;
+}
+export const listCatalogs = async (params?: ListCatalogsParams, options?: RequestInit): Promise<{
     data: CatalogListResponse;
 }> =>{
     const res = await fetch("/api/catalogs", {
         ...options,
-        method: "GET"
+        method: "GET",
+        headers: {
+            ...(params?.["X-Forwarded-Host"] != null && {
+                "X-Forwarded-Host": params["X-Forwarded-Host"]
+            }),
+            ...(params?.["X-Forwarded-Preferred-Username"] != null && {
+                "X-Forwarded-Preferred-Username": params["X-Forwarded-Preferred-Username"]
+            }),
+            ...(params?.["X-Forwarded-User"] != null && {
+                "X-Forwarded-User": params["X-Forwarded-User"]
+            }),
+            ...(params?.["X-Forwarded-Email"] != null && {
+                "X-Forwarded-Email": params["X-Forwarded-Email"]
+            }),
+            ...(params?.["X-Request-Id"] != null && {
+                "X-Request-Id": params["X-Request-Id"]
+            }),
+            ...(params?.["X-Forwarded-Access-Token"] != null && {
+                "X-Forwarded-Access-Token": params["X-Forwarded-Access-Token"]
+            }),
+            ...options?.headers
+        }
     });
     if (!res.ok) {
         const body = await res.text();
@@ -178,34 +207,37 @@ export const listCatalogs = async (options?: RequestInit): Promise<{
         data: await res.json()
     };
 };
-export const listCatalogsKey = ()=>{
+export const listCatalogsKey = (params?: ListCatalogsParams)=>{
     return [
-        "/api/catalogs"
+        "/api/catalogs",
+        params
     ] as const;
 };
 export function useListCatalogs<TData = {
     data: CatalogListResponse;
 }>(options?: {
+    params?: ListCatalogsParams;
     query?: Omit<UseQueryOptions<{
         data: CatalogListResponse;
     }, ApiError, TData>, "queryKey" | "queryFn">;
 }) {
     return useQuery({
-        queryKey: listCatalogsKey(),
-        queryFn: ()=>listCatalogs(),
+        queryKey: listCatalogsKey(options?.params),
+        queryFn: ()=>listCatalogs(options?.params),
         ...options?.query
     });
 }
 export function useListCatalogsSuspense<TData = {
     data: CatalogListResponse;
 }>(options?: {
+    params?: ListCatalogsParams;
     query?: Omit<UseSuspenseQueryOptions<{
         data: CatalogListResponse;
     }, ApiError, TData>, "queryKey" | "queryFn">;
 }) {
     return useSuspenseQuery({
-        queryKey: listCatalogsKey(),
-        queryFn: ()=>listCatalogs(),
+        queryKey: listCatalogsKey(options?.params),
+        queryFn: ()=>listCatalogs(options?.params),
         ...options?.query
     });
 }
@@ -293,7 +325,15 @@ export function useCurrentUserSuspense<TData = {
         ...options?.query
     });
 }
-export const deployMetricView = async (data: DeployMetricViewRequest, options?: RequestInit): Promise<{
+export interface DeployMetricViewParams {
+    "X-Forwarded-Host"?: string | null;
+    "X-Forwarded-Preferred-Username"?: string | null;
+    "X-Forwarded-User"?: string | null;
+    "X-Forwarded-Email"?: string | null;
+    "X-Request-Id"?: string | null;
+    "X-Forwarded-Access-Token"?: string | null;
+}
+export const deployMetricView = async (data: DeployMetricViewRequest, params?: DeployMetricViewParams, options?: RequestInit): Promise<{
     data: DeployMetricViewResponse;
 }> =>{
     const res = await fetch("/api/deploy-metric-view", {
@@ -301,6 +341,24 @@ export const deployMetricView = async (data: DeployMetricViewRequest, options?: 
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            ...(params?.["X-Forwarded-Host"] != null && {
+                "X-Forwarded-Host": params["X-Forwarded-Host"]
+            }),
+            ...(params?.["X-Forwarded-Preferred-Username"] != null && {
+                "X-Forwarded-Preferred-Username": params["X-Forwarded-Preferred-Username"]
+            }),
+            ...(params?.["X-Forwarded-User"] != null && {
+                "X-Forwarded-User": params["X-Forwarded-User"]
+            }),
+            ...(params?.["X-Forwarded-Email"] != null && {
+                "X-Forwarded-Email": params["X-Forwarded-Email"]
+            }),
+            ...(params?.["X-Request-Id"] != null && {
+                "X-Request-Id": params["X-Request-Id"]
+            }),
+            ...(params?.["X-Forwarded-Access-Token"] != null && {
+                "X-Forwarded-Access-Token": params["X-Forwarded-Access-Token"]
+            }),
             ...options?.headers
         },
         body: JSON.stringify(data)
@@ -322,14 +380,25 @@ export const deployMetricView = async (data: DeployMetricViewRequest, options?: 
 export function useDeployMetricView(options?: {
     mutation?: UseMutationOptions<{
         data: DeployMetricViewResponse;
-    }, ApiError, DeployMetricViewRequest>;
+    }, ApiError, {
+        params: DeployMetricViewParams;
+        data: DeployMetricViewRequest;
+    }>;
 }) {
     return useMutation({
-        mutationFn: (data)=>deployMetricView(data),
+        mutationFn: (vars)=>deployMetricView(vars.data, vars.params),
         ...options?.mutation
     });
 }
-export const discoverTables = async (data: DiscoverTablesRequest, options?: RequestInit): Promise<{
+export interface DiscoverTablesParams {
+    "X-Forwarded-Host"?: string | null;
+    "X-Forwarded-Preferred-Username"?: string | null;
+    "X-Forwarded-User"?: string | null;
+    "X-Forwarded-Email"?: string | null;
+    "X-Request-Id"?: string | null;
+    "X-Forwarded-Access-Token"?: string | null;
+}
+export const discoverTables = async (data: DiscoverTablesRequest, params?: DiscoverTablesParams, options?: RequestInit): Promise<{
     data: DiscoverTablesResponse;
 }> =>{
     const res = await fetch("/api/discover-tables", {
@@ -337,6 +406,24 @@ export const discoverTables = async (data: DiscoverTablesRequest, options?: Requ
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            ...(params?.["X-Forwarded-Host"] != null && {
+                "X-Forwarded-Host": params["X-Forwarded-Host"]
+            }),
+            ...(params?.["X-Forwarded-Preferred-Username"] != null && {
+                "X-Forwarded-Preferred-Username": params["X-Forwarded-Preferred-Username"]
+            }),
+            ...(params?.["X-Forwarded-User"] != null && {
+                "X-Forwarded-User": params["X-Forwarded-User"]
+            }),
+            ...(params?.["X-Forwarded-Email"] != null && {
+                "X-Forwarded-Email": params["X-Forwarded-Email"]
+            }),
+            ...(params?.["X-Request-Id"] != null && {
+                "X-Request-Id": params["X-Request-Id"]
+            }),
+            ...(params?.["X-Forwarded-Access-Token"] != null && {
+                "X-Forwarded-Access-Token": params["X-Forwarded-Access-Token"]
+            }),
             ...options?.headers
         },
         body: JSON.stringify(data)
@@ -358,10 +445,13 @@ export const discoverTables = async (data: DiscoverTablesRequest, options?: Requ
 export function useDiscoverTables(options?: {
     mutation?: UseMutationOptions<{
         data: DiscoverTablesResponse;
-    }, ApiError, DiscoverTablesRequest>;
+    }, ApiError, {
+        params: DiscoverTablesParams;
+        data: DiscoverTablesRequest;
+    }>;
 }) {
     return useMutation({
-        mutationFn: (data)=>discoverTables(data),
+        mutationFn: (vars)=>discoverTables(vars.data, vars.params),
         ...options?.mutation
     });
 }
@@ -401,7 +491,15 @@ export function useGenerateMetricView(options?: {
         ...options?.mutation
     });
 }
-export const mapColumns = async (data: MapColumnsRequest, options?: RequestInit): Promise<{
+export interface MapColumnsParams {
+    "X-Forwarded-Host"?: string | null;
+    "X-Forwarded-Preferred-Username"?: string | null;
+    "X-Forwarded-User"?: string | null;
+    "X-Forwarded-Email"?: string | null;
+    "X-Request-Id"?: string | null;
+    "X-Forwarded-Access-Token"?: string | null;
+}
+export const mapColumns = async (data: MapColumnsRequest, params?: MapColumnsParams, options?: RequestInit): Promise<{
     data: MapColumnsResponse;
 }> =>{
     const res = await fetch("/api/map-columns", {
@@ -409,6 +507,24 @@ export const mapColumns = async (data: MapColumnsRequest, options?: RequestInit)
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            ...(params?.["X-Forwarded-Host"] != null && {
+                "X-Forwarded-Host": params["X-Forwarded-Host"]
+            }),
+            ...(params?.["X-Forwarded-Preferred-Username"] != null && {
+                "X-Forwarded-Preferred-Username": params["X-Forwarded-Preferred-Username"]
+            }),
+            ...(params?.["X-Forwarded-User"] != null && {
+                "X-Forwarded-User": params["X-Forwarded-User"]
+            }),
+            ...(params?.["X-Forwarded-Email"] != null && {
+                "X-Forwarded-Email": params["X-Forwarded-Email"]
+            }),
+            ...(params?.["X-Request-Id"] != null && {
+                "X-Request-Id": params["X-Request-Id"]
+            }),
+            ...(params?.["X-Forwarded-Access-Token"] != null && {
+                "X-Forwarded-Access-Token": params["X-Forwarded-Access-Token"]
+            }),
             ...options?.headers
         },
         body: JSON.stringify(data)
@@ -430,10 +546,13 @@ export const mapColumns = async (data: MapColumnsRequest, options?: RequestInit)
 export function useMapColumns(options?: {
     mutation?: UseMutationOptions<{
         data: MapColumnsResponse;
-    }, ApiError, MapColumnsRequest>;
+    }, ApiError, {
+        params: MapColumnsParams;
+        data: MapColumnsRequest;
+    }>;
 }) {
     return useMutation({
-        mutationFn: (data)=>mapColumns(data),
+        mutationFn: (vars)=>mapColumns(vars.data, vars.params),
         ...options?.mutation
     });
 }

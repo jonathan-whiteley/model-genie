@@ -13,7 +13,7 @@ from ..models import (
     ExtractedEntity,
 )
 from ..llm import call_llm
-from ..core import create_router
+from ..core import create_router, Dependencies
 
 router = create_router()
 
@@ -47,10 +47,10 @@ Be precise with character positions. Zero-indexed. The "text" field must exactly
 
 
 @router.post("/parse-questions", response_model=ParseQuestionsResponse, operation_id="parseQuestions")
-async def parse_questions(request: ParseQuestionsRequest) -> ParseQuestionsResponse:
+async def parse_questions(request: ParseQuestionsRequest, ws: Dependencies.Client) -> ParseQuestionsResponse:
     """Parse business questions to extract measures, dimensions, and filters."""
     questions_text = "\n".join(f"{i}. {q}" for i, q in enumerate(request.questions))
-    result = call_llm(PARSE_SYSTEM_PROMPT, f"Business questions:\n{questions_text}")
+    result = call_llm(PARSE_SYSTEM_PROMPT, f"Business questions:\n{questions_text}", ws)
 
     parsed_questions = [
         ParsedQuestion(
@@ -64,16 +64,16 @@ async def parse_questions(request: ParseQuestionsRequest) -> ParseQuestionsRespo
 
 
 @router.post("/upload-questions", response_model=ParseQuestionsResponse, operation_id="uploadQuestions")
-async def upload_questions(file: UploadFile = File(...)) -> ParseQuestionsResponse:
+async def upload_questions(file: UploadFile = File(...), ws: Dependencies.Client = None) -> ParseQuestionsResponse:  # type: ignore[assignment]
     """Upload xlsx/csv file of business questions and parse them."""
     content = await file.read()
     questions: list[str] = []
 
     if file.filename and file.filename.endswith(".xlsx"):
         wb = load_workbook(filename=io.BytesIO(content), read_only=True)
-        ws = wb.active
-        if ws:
-            for row in ws.iter_rows(values_only=True):
+        sheet = wb.active
+        if sheet:
+            for row in sheet.iter_rows(values_only=True):
                 for cell in row:
                     if cell and isinstance(cell, str) and cell.strip():
                         questions.append(cell.strip())
@@ -85,4 +85,4 @@ async def upload_questions(file: UploadFile = File(...)) -> ParseQuestionsRespon
                 if cell.strip():
                     questions.append(cell.strip())
 
-    return await parse_questions(ParseQuestionsRequest(questions=questions))
+    return await parse_questions(ParseQuestionsRequest(questions=questions), ws)

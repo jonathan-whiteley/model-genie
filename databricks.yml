@@ -15,6 +15,16 @@ resources:
       name: "model-guru"
       description: "model-guru created with apx"
       source_code_path: ./.build
+      user_api_scopes:
+        - sql.statement-execution
+        - sql.warehouses:read
+        - catalog.catalogs:read
+        - catalog.schemas:read
+        - catalog.tables:read
+        - serving.serving-endpoints
+      permissions:
+        - user_name: jonathan.whiteley@databricks.com
+          level: CAN_MANAGE
 
 targets:
   dev:

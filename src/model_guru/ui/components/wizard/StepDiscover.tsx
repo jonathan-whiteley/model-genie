@@ -1,6 +1,5 @@
-import { Suspense } from "react";
 import { useWizard } from "@/lib/wizard-context";
-import { useListCatalogsSuspense, useDiscoverTables } from "@/lib/api";
+import { useListCatalogs, useDiscoverTables } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -13,28 +12,6 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-
-function CatalogSelector({
-  onSelect,
-}: {
-  onSelect: (catalog: string) => void;
-}) {
-  const { data } = useListCatalogsSuspense();
-  return (
-    <Select onValueChange={onSelect}>
-      <SelectTrigger className="w-64">
-        <SelectValue placeholder="Select a catalog" />
-      </SelectTrigger>
-      <SelectContent>
-        {data.data.catalogs.map((c) => (
-          <SelectItem key={c} value={c}>
-            {c}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-}
 
 function getConfidenceColor(confidence: number) {
   if (confidence >= 80)
@@ -54,12 +31,13 @@ export function StepDiscover() {
     setSelectedCatalog,
     setStep,
   } = useWizard();
+  const { data: catalogsData, isLoading: catalogsLoading } = useListCatalogs();
   const discoverMutation = useDiscoverTables();
 
   const handleCatalogSelect = async (catalog: string) => {
     setSelectedCatalog(catalog);
     try {
-      const result = await discoverMutation.mutateAsync({ catalog, entities });
+      const result = await discoverMutation.mutateAsync({ params: {}, data: { catalog, entities } });
       setTables(result.data.tables);
       setSelectedTables(
         result.data.tables
@@ -79,6 +57,8 @@ export function StepDiscover() {
     );
   };
 
+  const catalogs = catalogsData?.data?.catalogs ?? [];
+
   return (
     <div className="space-y-6">
       <Card>
@@ -86,9 +66,22 @@ export function StepDiscover() {
           <CardTitle>Select Unity Catalog</CardTitle>
         </CardHeader>
         <CardContent>
-          <Suspense fallback={<Skeleton className="h-10 w-64" />}>
-            <CatalogSelector onSelect={handleCatalogSelect} />
-          </Suspense>
+          {catalogsLoading ? (
+            <Skeleton className="h-10 w-64" />
+          ) : (
+            <Select onValueChange={handleCatalogSelect}>
+              <SelectTrigger className="w-64">
+                <SelectValue placeholder="Select a catalog" />
+              </SelectTrigger>
+              <SelectContent>
+                {catalogs.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </CardContent>
       </Card>
 

@@ -25,10 +25,13 @@ export function StepDeploy() {
   const handleDeploy = async () => {
     try {
       const result = await deployMutation.mutateAsync({
-        catalog,
-        schema_name: schemaName,
-        view_name: viewName,
-        yaml_content: yamlContent,
+        params: {},
+        data: {
+          catalog,
+          schema_name: schemaName,
+          view_name: viewName,
+          yaml_content: yamlContent,
+        },
       });
       setDeployResult(result.data);
     } catch {
